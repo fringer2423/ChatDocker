@@ -1,0 +1,71 @@
+{% extends 'index.html' %}
+
+{% block style %}
+    <style type="text/css">
+        #lefttext {
+            position: absolute;
+            left: 0px;
+            padding: 3px;
+            padding-left: 6px;
+            padding-right: 6px;
+            border-radius: 5px;
+            color: white;
+            background-color: #0079E5;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <div style="height: 100vh; width: 100vw; position: relative"
+         class="d-flex justify-content-center align-items-center">
+        <h1 style="top: 0; position: absolute">Добро пожаловать в комнату <span style="color: #0079E5">{{ room }}</span>, {{ name }}
+        </h1>
+
+        <div id="messagescontainer" style="overflow-y: auto; width: 40vw; height: 80vh; position:relative;"
+             class="container">
+            {% for message in messages %}
+            <div id="lefttext">{{ message }}</div>
+            <br><br>
+            {% endfor %}
+        </div>
+        <div style="position: absolute; bottom: 20px; width: 100vw" class="d-flex justify-content-center">
+            <input id="messageinputfield" style="width: 40vw; text-align: center; margin-right: 4px"
+                   class="form-control" type="text"
+                   placeholder="Введите ваше сообщение">
+            <input id="sendbutton" class="btn btn-primary" type="submit">
+        </div>
+
+    </div>
+
+    <script type="text/javascript">
+        console.log("test");
+        const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/chat/{{room}}');
+        document.querySelector('#sendbutton').onclick = function (e) {
+            const message = document.querySelector('#messageinputfield').value;
+            console.log(message);
+            chatSocket.send(JSON.stringify({'message': '{{ name }}: ' + message}));
+            document.querySelector('#messageinputfield').value = '';
+        }
+
+        document.querySelector('#messageinputfield').onkeyup = function (e) {
+            if (e.keyCode == 13) {
+                document.querySelector('#sendbutton').click();
+            }
+        }
+
+        function scrollToBottom() {
+            document.querySelector('#messagescontainer').scrollTo({top: document.
+                querySelector('#messagescontainer').scrollHeight, behavior: 'smooth'});
+        }
+
+        chatSocket.onmessage = function (e) {
+            const data = JSON.parse(e.data);
+            document.querySelector('#messagescontainer').
+                innerHTML += '<div id="lefttext">' + data.message + '</div>' + '<br><br>';
+            console.log(data.message);
+            scrollToBottom()
+        }
+    </script>
+
+{% endblock %}
